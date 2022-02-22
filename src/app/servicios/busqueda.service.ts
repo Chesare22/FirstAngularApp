@@ -29,7 +29,7 @@ export class BusquedaService {
     } else {
       return (
         this.http
-          .get('https://api.github.com/search/repositories?q=' + query)
+          .get('https://api.github.com/search/commits?q=' + query)
           .toPromise()
           // @ts-expect-error type "BusquedaInt" is not assignable to "Object"
           .then(saveInCache(this.cachedValues, query))
