@@ -1,16 +1,20 @@
 import { Injectable } from '@angular/core';
 import { BusquedaInt } from '../interfaces/busqueda-int';
 import { HttpClient } from '@angular/common/http';
-import { lastValueFrom, SubscribableOrPromise } from 'rxjs';
 
-const saveInCache =
-  <T>(cache: Record<string, T>, query: string) =>
-  (value: T) => {
-    if (value) {
-      cache[query] = value;
-    }
-    return value;
-  };
+type SaveInCache = <T>(
+  cache: Record<string, T>,
+  query: string
+) => (value: T) => T;
+
+const saveInCache: SaveInCache = (cache, query) => (value) => {
+  if (value) {
+    cache[query] = value;
+  }
+  return value;
+};
+
+type Buscar = (query: string) => Promise<BusquedaInt>;
 
 @Injectable({
   providedIn: 'root',
@@ -22,7 +26,7 @@ export class BusquedaService {
     this.http = http;
   }
 
-  buscar = (query: string): Promise<BusquedaInt> => {
+  buscar: Buscar = (query) => {
     let value = this.cachedValues[query];
     if (value) {
       return Promise.resolve(value);
