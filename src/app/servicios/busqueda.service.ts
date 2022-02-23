@@ -4,12 +4,12 @@ import { HttpClient } from '@angular/common/http';
 
 type SaveInCache = <T>(
   cache: Record<string, T>,
-  query: string
+  key: string
 ) => (value: T) => T;
 
-const saveInCache: SaveInCache = (cache, query) => (value) => {
+const saveInCache: SaveInCache = (cache, key) => (value) => {
   if (value) {
-    cache[query] = value;
+    cache[key] = value;
   }
   return value;
 };
