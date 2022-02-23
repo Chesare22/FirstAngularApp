@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BusquedaInt } from '../interfaces/busqueda-int';
 import { HttpClient } from '@angular/common/http';
+import { lastValueFrom } from 'rxjs';
 
 type SaveInCache = <T>(
   cache: Record<string, T>,
@@ -14,30 +15,36 @@ const saveInCache: SaveInCache = (cache, key) => (value) => {
   return value;
 };
 
-type Buscar = (query: string) => Promise<BusquedaInt>;
+const cacheRequest = <P>(request: (arg: string) => Promise<P>) => {
+  const cachedValues: Record<string, P> = {};
+
+  return (argument: string) => {
+    const value = cachedValues[argument];
+
+    return value
+      ? Promise.resolve(value)
+      : request(argument).then(saveInCache(cachedValues, argument));
+  };
+};
+
+const setupSearch = (http: HttpClient) => {
+  const search = (query: string) =>
+    lastValueFrom(
+      http.get<BusquedaInt>('https://api.github.com/search/commits?q=' + query)
+    );
+
+  return search;
+};
 
 @Injectable({
   providedIn: 'root',
 })
 export class BusquedaService {
-  cachedValues: Record<string, BusquedaInt> = {};
-
   constructor(private http: HttpClient) {
     this.http = http;
   }
 
-  buscar: Buscar = (query) => {
-    let value = this.cachedValues[query];
-    if (value) {
-      return Promise.resolve(value);
-    } else {
-      return (
-        this.http
-          .get('https://api.github.com/search/commits?q=' + query)
-          .toPromise()
-          // @ts-expect-error type "BusquedaInt" is not assignable to "Object"
-          .then(saveInCache(this.cachedValues, query))
-      );
-    }
-  };
+  private _buscar = setupSearch(this.http);
+
+  buscar = cacheRequest(this._buscar);
 }
