@@ -17,11 +17,10 @@ const setupSearch = (http: HttpClient) => {
   providedIn: 'root',
 })
 export class BusquedaService {
-  constructor(private http: HttpClient) {
-    this.http = http;
+  readonly buscar: (query: string) => Promise<BusquedaInt>;
+
+  constructor(http: HttpClient) {
+    const search = setupSearch(http);
+    this.buscar = cacheRequest(search);
   }
-
-  private _buscar = setupSearch(this.http);
-
-  buscar = cacheRequest(this._buscar);
 }
